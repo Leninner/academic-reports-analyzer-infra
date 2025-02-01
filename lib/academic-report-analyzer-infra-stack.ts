@@ -1,16 +1,29 @@
 import * as cdk from 'aws-cdk-lib';
+import { ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class AcademicReportAnalyzerInfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+   
+    const bucket = Bucket.fromBucketName(this, 'MyBucket', 'academic-report-analyzer-upload-test');
 
-    // The code that defines your stack goes here
+    this.createGetUploadUrlLambdaRole(bucket)
+  }
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'AcademicReportAnalyzerInfraQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+  createGetUploadUrlLambdaRole(s3Bucket: IBucket): Role {
+    const lambdaRole = new Role(this, 'GetUploadUrlLambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      roleName: 'get-upload-url-lambda-role',
+    });
+
+    lambdaRole.addManagedPolicy(
+      ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+    );
+
+    s3Bucket.grantPut(lambdaRole)
+
+    return lambdaRole;
   }
 }
