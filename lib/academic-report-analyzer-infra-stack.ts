@@ -10,6 +10,7 @@ export class AcademicReportAnalyzerInfraStack extends cdk.Stack {
     const bucket = Bucket.fromBucketName(this, 'MyBucket', 'academic-report-analyzer-upload-test');
 
     this.createGetUploadUrlLambdaRole(bucket)
+    this.createReportAnalyzerLambdaRole(bucket)
   }
 
   createGetUploadUrlLambdaRole(s3Bucket: IBucket): Role {
@@ -23,6 +24,21 @@ export class AcademicReportAnalyzerInfraStack extends cdk.Stack {
     );
 
     s3Bucket.grantPut(lambdaRole)
+
+    return lambdaRole;
+  }
+
+  createReportAnalyzerLambdaRole(s3Bucket: IBucket): Role {
+    const lambdaRole = new Role(this, 'ReportAnalyzerLambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      roleName: 'report-analyzer-lambda-role',
+    });
+
+    lambdaRole.addManagedPolicy(
+      ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+    );
+
+    s3Bucket.grantRead(lambdaRole)
 
     return lambdaRole;
   }
